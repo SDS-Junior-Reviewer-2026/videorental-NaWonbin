@@ -3,6 +3,7 @@ package com.videorental;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 class Customer {
 	private String name;
@@ -21,48 +22,35 @@ class Customer {
 	}
 
 	public String statement() {
-		double totalAmount = 0;
-		int frequentRenterPoints = 0;
-		Iterator<Rental> iterator = rentals.iterator();
-		String result = "Rental Record for " + getName() + "\n";
-
-		while ( iterator.hasNext() ) {
-			double thisAmount = 0;
-			Rental each = (Rental) iterator.next();
-			// determine amounts for each line
-
-			switch (each.getMovie().getPriceCode()) {
-			case Movie.REGULAR:
-				thisAmount += 2;
-				if (each.getDaysRented() > 2)
-					thisAmount += (each.getDaysRented() - 2) * 1.5;
-				break;
-				
-			case Movie.NEW_RELEASE:
-				thisAmount += each.getDaysRented() * 3;
-				break;
-				
-			case Movie.CHILDRENS:
-				thisAmount += 1.5;
-				if (each.getDaysRented() > 3)
-					thisAmount += (each.getDaysRented() - 3) * 1.5;
-				break;
-			}
-
-			// add frequent renter points
-			frequentRenterPoints++;
-			// add bonus for a two day new release rental
-			if ((each.getMovie().getPriceCode() == Movie.NEW_RELEASE) && each.getDaysRented() > 1)
-				frequentRenterPoints++;
-			// show figures
-			result += "\t" +  String.valueOf(thisAmount) + "(" + each.getMovie().getTitle() + ")" + "\n";
-
-			totalAmount += thisAmount;
-		}
-
-		result += "Amount owed is " + String.valueOf(totalAmount) + "\n";
-		result += "You earned " + String.valueOf(frequentRenterPoints) + " frequent renter pointers";
-
-		return result;
+        return setStatementHeader() + getRentalLineReport() + getStatementFooter();
 	}
+
+    private String getStatementFooter() {
+        return "Amount owed is " + getTotalAmount() + "\n" +
+                "You earned " + getFrequentRenterPoints() + " frequent renter pointers";
+    }
+
+    private String setStatementHeader() {
+        return "Rental Record for " + getName() + "\n";
+    }
+
+    private String getRentalLineReport() {
+        return rentals.stream()
+                .map(rental -> "\t" +  String.valueOf(rental.getMovie().getChargeFor(rental.getDaysRented())) + "(" + rental.getMovie().getTitle() + ")" + "\n")
+                .collect(Collectors.joining());
+    }
+
+    private int getFrequentRenterPoints() {
+        return rentals.stream()
+                .mapToInt((rental) -> (rental.getMovie().getFrequentRenterPointsFor(rental.getDaysRented())))
+                .sum();
+    }
+
+    private double getTotalAmount() {
+        return rentals.stream()
+                .mapToDouble((rental) -> (rental.getMovie().getChargeFor(rental.getDaysRented())))
+                .sum();
+
+    }
+
 }

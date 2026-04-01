@@ -10,9 +10,40 @@ public class CustomerTest {
     public static final String TITLE = "TITLE_NOT_IMPORTANT";
     Customer customer = new Customer(NAME);
 
+    private static Rental createRentalFor(int priceCode, int daysRented) {
+        Movie movie = getMovie(priceCode);
+        Rental rental = new Rental(movie, daysRented);
+        return rental;
+    }
+
+    private static Movie getMovie(int priceCode) {
+        switch (priceCode) {
+            case Movie.REGULAR:
+                return new RegularMovie(TITLE);
+            case Movie.NEW_RELEASE:
+                return new NewReleaseMovie(TITLE);
+            case Movie.CHILDRENS:
+                return new ChildrensMovie(TITLE);
+            default:
+                return null;
+        }
+    }
+
+    private static Movie setMovie(Movie movie) {
+        switch (movie.getPriceCode()) {
+            case Movie.REGULAR:
+                return new RegularMovie(TITLE);
+            case Movie.NEW_RELEASE:
+                return new NewReleaseMovie(TITLE);
+            case Movie.CHILDRENS:
+                return new ChildrensMovie(TITLE);
+            default:
+                return null;
+        }
+    }
+
     @Test
     void returnNewCustomer() {
-
         assertThat(customer).isNotNull();
 
     }
@@ -35,12 +66,6 @@ public class CustomerTest {
                 "\t2.0(" + TITLE + ")\n" +
                 "Amount owed is 2.0\n" +
                 "You earned 1 frequent renter pointers");
-    }
-
-    private static Rental createRentalFor(int priceCode, int daysRented) {
-        Movie movie = new Movie(TITLE, priceCode);
-        Rental rental = new Rental(movie, daysRented);
-        return rental;
     }
 
     @Test
@@ -122,8 +147,9 @@ public class CustomerTest {
     @Test
     void useSetPriceCode() {
         // arange
-        Movie movie = new Movie(TITLE, Movie.REGULAR);
+        Movie movie = getMovie(Movie.REGULAR);
         movie.setPriceCode(Movie.NEW_RELEASE);
+        movie = setMovie(movie);
         Rental rental = new Rental(movie, 10);
         customer.addRental(rental);
 
